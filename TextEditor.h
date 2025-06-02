@@ -1,32 +1,39 @@
-#pragma once
-#include "Clipboard.h"
-#include "History.h"
-#include <vector>
-#include <string>
+#ifndef TEXTEDITOR_H
+#define TEXTEDITOR_H
+
+const int MAX_TEXT_LEN = 1000;
+const int MAX_CLIPBOARD_LEN = 256;
+const int MAX_HISTORY = 3;
 
 class TextEditor {
 private:
-    std::vector<std::string> lines;
-    Clipboard clipboard;
-    History history;
-    int cursor_line = 0;
-    int cursor_index = 0;
+    char text[MAX_TEXT_LEN];
+    int text_length;
+
+    char clipboard[MAX_CLIPBOARD_LEN];
+
+    char undo_stack[MAX_HISTORY][MAX_TEXT_LEN];
+    int undo_top;
+
+    char redo_stack[MAX_HISTORY][MAX_TEXT_LEN];
+    int redo_top;
+
+    void copy_state(char dest[MAX_TEXT_LEN], const char src[MAX_TEXT_LEN]);
+    void push_undo();
+    void push_redo();
+    void restore_from(char dest[MAX_TEXT_LEN]);
 
 public:
-    void set_cursor(int line, int index);
-    void append_text(const std::string& text);
-    void new_line();
-    void insert_text(const std::string& text);
-    void insert_replacement(const std::string& text);
-    void delete_text(int count);
-    void cut(int count);
-    void copy(int count);
-    void paste();
+    TextEditor();
+
+    void print();
+    void insert(int index, const char* str);
+    void delete_range(int index, int count);
+    void cut(int index, int count);
+    void copy(int index, int count);
+    void paste(int index);
     void undo();
     void redo();
-    void save_to_file(const std::string& filename) const;
-    void load_from_file(const std::string& filename);
-    void print_text() const;
-    void search_text(const std::string& query) const;
-
 };
+
+#endif

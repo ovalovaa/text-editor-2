@@ -1,106 +1,106 @@
 #include "TextEditor.h"
-#include <iostream>
-#include <fstream>
+#include <cstdio>
 
-void TextEditor::set_cursor(int line, int index) {
-    if (line >= 0 && line < (int)lines.size() && index >= 0 && index <= (int)lines[line].size()) {
-        cursor_line = line;
-        cursor_index = index;
-    } else {
-        std::cout << "❌ Invalid cursor position: line " << line << ", index " << index << "\n";
+TextEditor::TextEditor() {
+    text[0] = '\0';
+    text_length = 0;
+    clipboard[0] = '\0';
+    undo_top = 0;
+    redo_top = 0;
+}
+
+void TextEditor::copy_state(char dest[MAX_TEXT_LEN], const char src[MAX_TEXT_LEN]) {
+    int i = 0;
+    while ((dest[i] = src[i]) != '\0') i++;
+}
+
+void TextEditor::push_undo() {
+    if (undo_top < MAX_HISTORY) {
+        copy_state(undo_stack[undo_top++], text);
     }
 }
 
-void TextEditor::append_text(const std::string& text) {
-    if (lines.empty()) lines.emplace_back("");
-    history.save(lines);
-    lines.back() += text;
+void TextEditor::push_redo() {
+    if (redo_top < MAX_HISTORY) {
+        copy_state(redo_stack[redo_top++], text);
+    }
 }
 
-void TextEditor::new_line() {
-    history.save(lines);
-    lines.emplace_back("");
+void TextEditor::restore_from(char dest[MAX_TEXT_LEN]) {
+    copy_state(text, dest);
+    int i = 0;
+    while (text[i] != '\0') i++;
+    text_length = i;
 }
 
-void TextEditor::insert_text(const std::string& text) {
-    history.save(lines);
-    lines[cursor_line].insert(cursor_index, text);
-    cursor_index += text.length();
+void TextEditor::print() {
+    printf("%s\n", text);
 }
 
-void TextEditor::insert_replacement(const std::string& text) {
-    history.save(lines);
-    lines[cursor_line].replace(cursor_index, text.length(), text);
-    cursor_index += text.length();
+void TextEditor::insert(int index, const char* str) {
+    push_undo();
+    redo_top = 0;
+
+    int len = 0;
+    while (str[len] != '\0') len++;
+
+    if (index < 0 || index > text_length || text_length + len >= MAX_TEXT_LEN) return;
+
+    for (int i = text_length - 1; i >= index; i--) {
+        text[i + len] = text[i];
+    }
+
+    for (int i = 0; i < len; i++) {
+        text[index + i] = str[i];
+    }
+
+    text_length += len;
+    text[text_length] = '\0';
 }
 
-void TextEditor::delete_text(int count) {
-    history.save(lines);
-    lines[cursor_line].erase(cursor_index, count);
+void TextEditor::delete_range(int index, int count) {
+    push_undo();
+    redo_top = 0;
+
+    if (index < 0 || index >= text_length) return;
+    if (index + count > text_length) count = text_length - index;
+
+    for (int i = index + count; i <= text_length; i++) {
+        text[i - count] = text[i];
+    }
+
+    text_length -= count;
 }
 
-void TextEditor::cut(int count) {
-    history.save(lines);
-    clipboard.copy(lines[cursor_line].substr(cursor_index, count));
-    lines[cursor_line].erase(cursor_index, count);
+void TextEditor::copy(int index, int count) {
+    if (index < 0 || index >= text_length || count <= 0) return;
+
+    if (index + count > text_length) count = text_length - index;
+
+    int i;
+    for (i = 0; i < count && i < MAX_CLIPBOARD_LEN - 1; i++) {
+        clipboard[i] = text[index + i];
+    }
+    clipboard[i] = '\0';
 }
 
-void TextEditor::copy(int count) {
-    clipboard.copy(lines[cursor_line].substr(cursor_index, count));
+void TextEditor::cut(int index, int count) {
+    copy(index, count);
+    delete_range(index, count);
 }
 
-void TextEditor::paste() {
-    history.save(lines);
-    lines[cursor_line].insert(cursor_index, clipboard.paste());
-    cursor_index += clipboard.paste().length();
+void TextEditor::paste(int index) {
+    insert(index, clipboard);
 }
 
 void TextEditor::undo() {
-    if (history.can_undo())
-        lines = history.undo(lines);
+    if (undo_top == 0) return;
+    push_redo();
+    restore_from(undo_stack[--undo_top]);
 }
 
 void TextEditor::redo() {
-    if (history.can_redo())
-        lines = history.redo(lines);
+    if (redo_top == 0) return;
+    push_undo();
+    restore_from(redo_stack[--redo_top]);
 }
-
-void TextEditor::save_to_file(const std::string& filename) const {
-    std::ofstream file(filename);
-    for (const auto& line : lines)
-        file << line << '\n';
-}
-
-void TextEditor::load_from_file(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        std::cout << "❌ Error opening file: " << filename << "\n";
-        return;
-    }
-
-    std::string buffer;
-    lines.clear();
-
-    while (std::getline(file, buffer)) {
-        std::cout << "[DEBUG] Read line: \"" << buffer << "\"\n";
-        lines.push_back(buffer);
-    }
-
-    std::cout << "✅ Text has been loaded successfully\n";
-}
-
-void TextEditor::print_text() const {
-    for (const auto& line : lines)
-        std::cout << line << '\n';
-}
-void TextEditor::search_text(const std::string& query) const {
-    for (int i = 0; i < (int)lines.size(); ++i) {
-        const std::string& line = lines[i];
-        size_t pos = 0;
-        while ((pos = line.find(query, pos)) != std::string::npos) {
-            std::cout << "Text is present in this position: " << i << " " << pos << "\n";
-            ++pos;
-        }
-    }
-}
-
