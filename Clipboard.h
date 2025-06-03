@@ -1,12 +1,16 @@
-#pragma once
-#include <string>
+#ifndef CLIPBOARD_H
+#define CLIPBOARD_H
+#include "Constants.h"
 
 class Clipboard {
 private:
-    std::string buffer;
+    char buffer[CLIPBOARD_MAX];
 
 public:
-    void copy(const std::string& text);
-    const std::string& paste() const;
+    Clipboard();
+    void copy(const char* text, int length);
+    const char* paste() const;
     bool is_empty() const;
 };
+
+#endif

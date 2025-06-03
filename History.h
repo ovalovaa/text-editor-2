@@ -1,17 +1,28 @@
-#pragma once
-#include <stack>
-#include <vector>
-#include <string>
+#ifndef HISTORY_H
+#define HISTORY_H
+#include "Constants.h"
 
 class History {
 private:
-    std::stack<std::vector<std::string>> undo_stack;
-    std::stack<std::vector<std::string>> redo_stack;
+    char** undo_stack[MAX_HISTORY];
+    int undo_top;
+
+    char** redo_stack[MAX_HISTORY];
+    int redo_top;
 
 public:
-    void save(const std::vector<std::string>& state);
+    History();
+    ~History();
+
+    void save(char* lines[], int line_count);
     bool can_undo() const;
     bool can_redo() const;
-    std::vector<std::string> undo(std::vector<std::string>& current);
-    std::vector<std::string> redo(std::vector<std::string>& current);
+    char** undo(char* lines[], int& line_count);
+    char** redo(char* lines[], int& line_count);
+
+private:
+    char** clone_state(char* lines[], int line_count);
+    void free_state(char** state);
 };
+
+#endif

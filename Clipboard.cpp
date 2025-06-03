@@ -1,13 +1,20 @@
 #include "Clipboard.h"
+#include <cstring>
 
-void Clipboard::copy(const std::string& text) {
-    buffer = text;
+Clipboard::Clipboard() {
+    buffer[0] = '\0';
 }
 
-const std::string& Clipboard::paste() const {
+void Clipboard::copy(const char* text, int length) {
+    if (length >= CLIPBOARD_MAX) length = CLIPBOARD_MAX - 1;
+    strncpy(buffer, text, length);
+    buffer[length] = '\0';
+}
+
+const char* Clipboard::paste() const {
     return buffer;
 }
 
 bool Clipboard::is_empty() const {
-    return buffer.empty();
+    return buffer[0] == '\0';
 }

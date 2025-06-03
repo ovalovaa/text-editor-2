@@ -8,5 +8,6 @@ add_executable(untitled6 main.cpp
         Clipboard.h
         History.cpp
         History.h
+        Constants.h
         TextEditor.cpp
         TextEditor.h)
