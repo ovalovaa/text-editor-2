@@ -126,6 +126,12 @@ int main() {
                 std::cout << "Inserted with replacement.\n";
                 break;
             }
+            case 16: {
+                std::cout << "Cursor is at line " << editor.get_cursor_line()
+                          << ", index " << editor.get_cursor_index() << std::endl;
+                break;
+            }
+
             default:
                 std::cout << "The command is not implemented\n";
         }

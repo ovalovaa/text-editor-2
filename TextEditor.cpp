@@ -1,4 +1,4 @@
-// TextEditor.cpp
+
 #include "TextEditor.h"
 #include "Constants.h"
 #include <cstdio>
@@ -16,7 +16,7 @@ TextEditor::~TextEditor() {
 void TextEditor::print_assist() const {
     printf("\nCommands:\n");
     printf("1 - Append text\n2 - New line\n3 - Save\n4 - Load\n5 - Print\n6 - Insert\n7 - Search\n8 - Delete\n");
-    printf("9 - Cut\n10 - Copy\n11 - Paste\n12 - Undo\n13 - Redo\n14 - Set cursor\n15 - Insert with replacement\n0 - Exit\n");
+    printf("9 - Cut\n10 - Copy\n11 - Paste\n12 - Undo\n13 - Redo\n14 - Set cursor\n15 - Insert with replacement\n16 -Check cursor\n0 - Exit\n");
 }
 
 void TextEditor::print_text() const {
@@ -113,6 +113,14 @@ void TextEditor::set_cursor(int line, int index) {
     if (line >= 0 && line < line_count) cursor_line = line;
     if (index >= 0 && index < MAX_LINE_LENGTH) cursor_index = index;
 }
+int TextEditor::get_cursor_line() const {
+    return cursor_line;
+}
+
+int TextEditor::get_cursor_index() const {
+    return cursor_index;
+}
+
 
 void TextEditor::insert_with_replacement(const char* text) {
     if (cursor_line < 0 || cursor_line >= line_count) return;
@@ -153,4 +161,6 @@ void TextEditor::redo() {
         }
         free(state);
     }
+
+
 }

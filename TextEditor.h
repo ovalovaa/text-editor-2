@@ -36,9 +36,11 @@ public:
 
     void set_cursor(int line, int index);
     void insert_with_replacement(const char* text);
+    int get_cursor_line() const;
+    int get_cursor_index() const;
 
     void undo();
     void redo();
 };
 
-#endif // TEXTEDITOR_H
+#endif
